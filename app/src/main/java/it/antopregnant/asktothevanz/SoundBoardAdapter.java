@@ -19,6 +19,7 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.io.File;
@@ -26,6 +27,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -42,7 +44,7 @@ class SoundBoardAdapter extends RecyclerView.Adapter<SoundBoardAdapter.ViewHolde
     private MediaPlayer player;
     ActionMode actionMode;
     MainActivity main;
-    String sharepath;
+    String sharePath;
     int toShare;
 
     public SoundBoardAdapter(Context context, MainActivity main) {
@@ -63,6 +65,31 @@ class SoundBoardAdapter extends RecyclerView.Adapter<SoundBoardAdapter.ViewHolde
         }
     }
 
+    public void share(){
+        String d[] = sharePath.split("/");
+        String extPath = Environment.getExternalStorageDirectory() + "/Sounds/" + d[1] + ".mp3";
+        File f = new File(extPath);
+        try{
+            InputStream is = main.getResources().openRawResource(toShare);
+            OutputStream os = new FileOutputStream(f);
+            byte[] buffer = new byte[1024];
+            int lengthRead;
+            while ((lengthRead = is.read(buffer)) > 0) {
+                os.write(buffer, 0, lengthRead);
+                os.flush();
+            }
+        }catch(IOException e){
+            e.printStackTrace();
+        }
+        System.out.println(extPath);
+        Uri uri = Uri.parse(extPath);
+        System.out.println(uri);
+        Intent share = new Intent(Intent.ACTION_SEND);
+        share.setType("audio/mp3");
+        share.putExtra(Intent.EXTRA_STREAM, uri);
+        share.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        main.startActivity(Intent.createChooser(share, "Condividi file audio"));
+    }
 
     @Override
     public SoundBoardAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -88,34 +115,10 @@ class SoundBoardAdapter extends RecyclerView.Adapter<SoundBoardAdapter.ViewHolde
             actionMode = main.startActionMode(SoundBoardAdapter.this);
             view.setSelected(true);
             actionMode = null;
-            sharepath = main.getResources().getResourceName(sounds.get(position));
+            sharePath = main.getResources().getResourceName(sounds.get(position));
             toShare = sounds.get(position);
             return true;
         });
-    }
-
-    public void share(){
-        System.out.println(sharepath);
-        String s[] = sharepath.split("/");
-        InputStream inputStream;
-        FileOutputStream outputStream;
-        File f;
-        try{
-            f = new File(Environment.getExternalStorageDirectory() + "/Sounds", "sound_" + s[1] + ".mp3");
-            inputStream = main.getResources().openRawResource(toShare);
-            outputStream = new FileOutputStream(f);
-            byte buffer[] = new byte[2048];
-            int length;
-            while((length = inputStream.read(buffer))>0){
-                outputStream.write(buffer, 0, length);
-            }
-            inputStream.close();
-            outputStream.close();
-        }catch (IOException e){}
-        Intent share = new Intent(Intent.ACTION_SEND);
-        share.putExtra(Intent.EXTRA_STREAM, Uri.parse("file://" + Environment.getExternalStorageDirectory() + "/Sounds/sound_" + s[1] + ".mp3"));
-        share.setType("audio/mp3");
-        main.startActivity(Intent.createChooser(share, "Share audio file"));
     }
 
     @Override
@@ -137,12 +140,10 @@ class SoundBoardAdapter extends RecyclerView.Adapter<SoundBoardAdapter.ViewHolde
 
     @Override
     public boolean onActionItemClicked(ActionMode actionMode, MenuItem menuItem) {
-        switch (menuItem.getItemId()){
+        switch (menuItem.getItemId()) {
             case R.id.share:
-                /*Metodo di condivisione*/
                 share();
-                actionMode.finish();
-                return true;
+                break;
         }
         return false;
     }

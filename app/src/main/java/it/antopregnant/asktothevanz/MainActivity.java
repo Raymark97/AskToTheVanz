@@ -14,6 +14,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.view.ActionMode;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.Toast;
 
@@ -49,5 +50,11 @@ public class MainActivity extends AppCompatActivity {
         RecyclerView rw = findViewById(R.id.rw);
         rw.setLayoutManager(new GridLayoutManager(this, 3));
         rw.setAdapter(new SoundBoardAdapter(getApplicationContext(), this));
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        //getMenuInflater().inflate(R.menu.songs_menu_share, menu);
+        return super.onCreateOptionsMenu(menu);
     }
 }
