@@ -24,6 +24,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -65,11 +66,11 @@ class SoundBoardAdapter extends RecyclerView.Adapter<SoundBoardAdapter.ViewHolde
         }
     }
 
-    public void share(){
+    public void share() {
         String d[] = sharePath.split("/");
         String extPath = Environment.getExternalStorageDirectory() + "/Sounds/" + d[1] + ".mp3";
         File f = new File(extPath);
-        try{
+        try {
             InputStream is = main.getResources().openRawResource(toShare);
             OutputStream os = new FileOutputStream(f);
             byte[] buffer = new byte[1024];
@@ -78,7 +79,7 @@ class SoundBoardAdapter extends RecyclerView.Adapter<SoundBoardAdapter.ViewHolde
                 os.write(buffer, 0, lengthRead);
                 os.flush();
             }
-        }catch(IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
         System.out.println(extPath);
@@ -89,6 +90,22 @@ class SoundBoardAdapter extends RecyclerView.Adapter<SoundBoardAdapter.ViewHolde
         share.putExtra(Intent.EXTRA_STREAM, uri);
         share.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         main.startActivity(Intent.createChooser(share, "Condividi file audio"));
+    }
+
+    public void share2() {
+        String d[] = sharePath.split("/");
+        File soundsPath = new File(context.getFilesDir().getPath(), "raw");
+        File newSoundFile = new File(soundsPath, "/" + d[1]);
+        System.out.println(Uri.fromFile(newSoundFile));
+        Uri contentUri = FileProvider.getUriForFile(context, "it.antopregnant.fileprovider", newSoundFile);
+        System.out.println(contentUri);
+        System.out.println(sharePath);
+        Intent share = new Intent(Intent.ACTION_SEND);
+        share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        share.setType("audio/*");
+        share.putExtra(Intent.EXTRA_STREAM, contentUri);
+        main.startActivity(Intent.createChooser(share, "Condividi audio"));
+
     }
 
     @Override
@@ -142,7 +159,8 @@ class SoundBoardAdapter extends RecyclerView.Adapter<SoundBoardAdapter.ViewHolde
     public boolean onActionItemClicked(ActionMode actionMode, MenuItem menuItem) {
         switch (menuItem.getItemId()) {
             case R.id.share:
-                share();
+                share2();
+                System.out.println("Ci passa per davvero");
                 break;
         }
         return false;
