@@ -94,16 +94,25 @@ class SoundBoardAdapter extends RecyclerView.Adapter<SoundBoardAdapter.ViewHolde
 
     public void share2() {
         String d[] = sharePath.split("/");
-        File soundsPath = new File(context.getFilesDir().getPath(), "raw");
-        File newSoundFile = new File(soundsPath, "/" + d[1]);
-        System.out.println(Uri.fromFile(newSoundFile));
-        Uri contentUri = FileProvider.getUriForFile(context, "it.antopregnant.fileprovider", newSoundFile);
-        System.out.println(contentUri);
+        File source = new File("android.resource://" + main.getPackageName() + "/raw/", d[1]);
+        File dest = context.getExternalFilesDir(null);
+        try {
+            InputStream is = new FileInputStream(source);
+            OutputStream os = new FileOutputStream(dest);
+            byte[] buffer = new byte[1024];
+            int lengthRead;
+            while ((lengthRead = is.read(buffer)) > 0) {
+                os.write(buffer, 0, lengthRead);
+                os.flush();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         System.out.println(sharePath);
         Intent share = new Intent(Intent.ACTION_SEND);
         share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         share.setType("audio/*");
-        share.putExtra(Intent.EXTRA_STREAM, contentUri);
+        share.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(dest));
         main.startActivity(Intent.createChooser(share, "Condividi audio"));
 
     }

@@ -6,4 +6,8 @@
     <files-path
         name="pictures"
         path="drawable/" />
+    <external-path
+        name="sounds"
+        path="/Sounds"
+        />
 </paths>
