@@ -117,6 +117,34 @@ class SoundBoardAdapter extends RecyclerView.Adapter<SoundBoardAdapter.ViewHolde
 
     }
 
+    public void share3() {
+        String d[] = sharePath.split("/");
+        String extPath = Environment.getExternalStorageDirectory() + "/Sounds/" + d[1] + ".mp3";
+        File f = new File(extPath);
+        Uri uri = Uri.parse(extPath);
+        context.grantUriPermission("it.antopregnant.asktothevanz", uri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        try {
+            InputStream is = main.getResources().openRawResource(toShare);
+            OutputStream os = new FileOutputStream(f);
+            byte[] buffer = new byte[1024];
+            int lengthRead;
+            while ((lengthRead = is.read(buffer)) > 0) {
+                os.write(buffer, 0, lengthRead);
+                os.flush();
+            }
+            is.close();
+            os.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Intent share = new Intent(Intent.ACTION_SEND);
+        share.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        share.setType("audio/*");
+        share.putExtra(Intent.EXTRA_STREAM, uri);
+        main.startActivity(Intent.createChooser(share, "Condividi audio"));
+
+    }
+
     @Override
     public SoundBoardAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         ImageButton v = (ImageButton) LayoutInflater.from(parent.getContext())
@@ -168,7 +196,7 @@ class SoundBoardAdapter extends RecyclerView.Adapter<SoundBoardAdapter.ViewHolde
     public boolean onActionItemClicked(ActionMode actionMode, MenuItem menuItem) {
         switch (menuItem.getItemId()) {
             case R.id.share:
-                share2();
+                main.runOnUiThread(this::share3);
                 System.out.println("Ci passa per davvero");
                 break;
         }
